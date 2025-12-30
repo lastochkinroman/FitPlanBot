@@ -1,1 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
 .env
+
+# Docker
+.docker_data/
+
+# IDE
+.vscode/
+.idea/
+
+# Alembic
+alembic/__pycache__/
