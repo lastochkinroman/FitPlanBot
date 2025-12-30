@@ -33,3 +33,4 @@ class QuestionnaireStates(StatesGroup):
     
     # Группа 5: Подтверждение
     confirmation = State()
+    
