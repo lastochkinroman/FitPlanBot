@@ -26,5 +26,16 @@ services:
       - "8080:8080"
     restart: always
 
+  admin:
+    build: .
+    container_name: fitplanbot_admin
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/fitplanbot
+    depends_on:
+      - db
+    restart: always
+
 volumes:
   postgres_data:
