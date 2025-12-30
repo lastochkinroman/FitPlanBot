@@ -77,10 +77,12 @@ async def main():
     from src.bot.handlers.start import router as start_router
     from src.bot.handlers.menu import router as menu_router
     from src.bot.handlers.profile import router as profile_router
-    
+    from src.bot.handlers.workouts import router as workouts_router
+
     dp.include_router(start_router)
     dp.include_router(menu_router)
     dp.include_router(profile_router)
+    dp.include_router(workouts_router)
     
     logger.info("Routers included")
     logger.info("Bot is starting polling...")

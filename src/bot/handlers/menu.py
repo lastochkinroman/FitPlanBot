@@ -114,31 +114,7 @@ async def profile_menu_button(message: types.Message):
 
 # Остальные хэндлеры для других кнопок остаются без изменений
 
-@router.message(F.text == "🏋️ Мой план")
-async def show_workout_plan(message: types.Message):
-    print(f"Handler: Мой план called for user {message.from_user.id}")
-    await message.answer(
-        "🏋️ <b>План тренировок</b>\n\n"
-        "Чтобы получить персонализированный план, нужно:\n"
-        "1️⃣ Заполнить анкету\n"
-        "2️⃣ Активировать подписку\n\n"
-        "<i>Функционал тренировок находится в разработке...</i>",
-        parse_mode="HTML"
-    )
-    print(f"Handler: Мой план response sent to user {message.from_user.id}")
 
-@router.message(F.text == "🍎 Питание")
-async def show_nutrition_plan(message: types.Message):
-    print(f"Handler: Питание called for user {message.from_user.id}")
-    await message.answer(
-        "🍎 <b>План питания</b>\n\n"
-        "Индивидуальный рацион будет доступен после:\n"
-        "1️⃣ Заполнения анкеты\n"
-        "2️⃣ Активации подписки\n\n"
-        "<i>Функционал питания находится в разработке...</i>",
-        parse_mode="HTML"
-    )
-    print(f"Handler: Питание response sent to user {message.from_user.id}")
 
 @router.message(F.text == "⚙️ Настройки")
 async def show_settings(message: types.Message):

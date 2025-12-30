@@ -173,6 +173,24 @@ class WorkoutPlanAdmin(ModelView, model=WorkoutPlan):
     column_searchable_list = [WorkoutPlan.name]
     column_sortable_list = [WorkoutPlan.created_at]
 
+    # Настраиваем отображение JSON полей
+    form_overrides = {
+        'target_goal': 'TextArea',
+        'target_level': 'TextArea',
+        'target_body_type': 'TextArea',
+        'schedule': 'TextArea',
+        'video_links': 'TextArea',
+    }
+
+    column_labels = {
+        'target_goal': 'Цели (JSON массив)',
+        'target_level': 'Уровни сложности (JSON массив)',
+        'target_body_type': 'Типы телосложения (JSON массив)',
+        'schedule': 'Расписание (JSON объект)',
+        'video_links': 'Видео ссылки (JSON объект)',
+        'created_by_admin': 'Создано администратором',
+    }
+
 # Модель администратора для планов питания
 class MealPlanAdmin(ModelView, model=MealPlan):
     column_list = [
