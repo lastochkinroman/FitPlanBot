@@ -14,7 +14,7 @@ class SubscriptionRepository:
 
     async def get_active_for_user(self, user_id: str) -> Optional[Subscription]:
         """
-        Получает активную подписку пользователя
+        Получает активную подписку пользователя (самую свежую)
         """
         now = datetime.utcnow()
         stmt = select(Subscription).where(
@@ -22,9 +22,9 @@ class SubscriptionRepository:
             Subscription.status == 'active',
             Subscription.starts_at <= now,
             Subscription.ends_at >= now
-        )
+        ).order_by(Subscription.created_at.desc())
         result = await self.session.execute(stmt)
-        return result.scalar_one_or_none()
+        return result.scalars().first()  # Возвращает первый объект или None
 
     async def get_pending_for_user(self, user_id: str) -> Optional[Subscription]:
         """

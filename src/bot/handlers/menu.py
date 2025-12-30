@@ -116,6 +116,7 @@ async def profile_menu_button(message: types.Message):
 
 @router.message(F.text == "🏋️ Мой план")
 async def show_workout_plan(message: types.Message):
+    print(f"Handler: Мой план called for user {message.from_user.id}")
     await message.answer(
         "🏋️ <b>План тренировок</b>\n\n"
         "Чтобы получить персонализированный план, нужно:\n"
@@ -124,9 +125,11 @@ async def show_workout_plan(message: types.Message):
         "<i>Функционал тренировок находится в разработке...</i>",
         parse_mode="HTML"
     )
+    print(f"Handler: Мой план response sent to user {message.from_user.id}")
 
 @router.message(F.text == "🍎 Питание")
 async def show_nutrition_plan(message: types.Message):
+    print(f"Handler: Питание called for user {message.from_user.id}")
     await message.answer(
         "🍎 <b>План питания</b>\n\n"
         "Индивидуальный рацион будет доступен после:\n"
@@ -135,6 +138,7 @@ async def show_nutrition_plan(message: types.Message):
         "<i>Функционал питания находится в разработке...</i>",
         parse_mode="HTML"
     )
+    print(f"Handler: Питание response sent to user {message.from_user.id}")
 
 @router.message(F.text == "⚙️ Настройки")
 async def show_settings(message: types.Message):
@@ -151,13 +155,25 @@ async def show_settings(message: types.Message):
 @router.message(F.text == "💳 Купить подписку")
 async def show_subscription(message: types.Message):
     from src.database.repositories.subscription_repo import SubscriptionRepository
+    from src.database.repositories.user_repo import UserRepository
     from src.database.session import async_session_maker
 
-    user_id = message.from_user.id
+    telegram_id = message.from_user.id
 
     async with async_session_maker() as session:
+        user_repo = UserRepository(session)
+        user = await user_repo.get_by_telegram_id(telegram_id)
+
+        if not user:
+            await message.answer(
+                "❌ <b>Пользователь не найден</b>\n\n"
+                "Сначала зарегистрируйтесь с помощью /start",
+                parse_mode="HTML"
+            )
+            return
+
         repo = SubscriptionRepository(session)
-        subscription = await repo.create_pending(str(user_id))  # UUID as string
+        subscription = await repo.create_pending(user.id)
 
         if subscription:
             await message.answer(

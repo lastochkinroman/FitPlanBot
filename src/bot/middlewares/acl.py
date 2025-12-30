@@ -38,13 +38,23 @@ class ACLMiddleware(BaseMiddleware):
 
         # Проверяем подписку в БД
         from src.database.repositories.subscription_repo import SubscriptionRepository
+        from src.database.repositories.user_repo import UserRepository
         from src.database.session import async_session_maker
 
         async with async_session_maker() as session:
+            user_repo = UserRepository(session)
+            user = await user_repo.get_by_telegram_id(message.from_user.id)
+
+            if not user:
+                # Пользователь не найден, пропускаем проверку подписки
+                print(f"ACL: User {message.from_user.id} not found, allowing access")
+                return await handler(event, data)
+
             repo = SubscriptionRepository(session)
-            subscription = await repo.get_active_for_user(str(message.from_user.id))
+            subscription = await repo.get_active_for_user(user.id)
 
             if not subscription:
+                print(f"ACL: No active subscription for user {user.id}, blocking access to: {text}")
                 await message.answer(
                     "❌ <b>Для доступа к этому функционалу нужна активная подписка.</b>\n\n"
                     "💳 Нажмите <b>'Купить подписку'</b> для отправки заявки на активацию.\n\n"
@@ -52,5 +62,7 @@ class ACLMiddleware(BaseMiddleware):
                     parse_mode="HTML"
                 )
                 return
+            else:
+                print(f"ACL: Active subscription found for user {user.id}, allowing access to: {text}")
 
         return await handler(event, data)
