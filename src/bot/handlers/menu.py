@@ -61,8 +61,12 @@ async def show_profile(user_id: int, first_name: str):
         if profile.age:
             profile_info.append(f"• <b>Возраст:</b> {profile.age} лет")
         if profile.gender:
-            gender_emoji = {"male": "👨", "female": "👩"}.get(profile.gender, "👤")
-            profile_info.append(f"• <b>Пол:</b> {gender_emoji} {profile.gender}")
+            gender_display = {
+                "male": "👨 Мужской",
+                "female": "👩 Женский",
+                "other": "⚧️ Другой"
+            }.get(profile.gender, f"👤 {profile.gender}")
+            profile_info.append(f"• <b>Пол:</b> {gender_display}")
         if profile.height_cm:
             profile_info.append(f"• <b>Рост:</b> {profile.height_cm} см")
         if profile.weight_kg:
@@ -70,7 +74,15 @@ async def show_profile(user_id: int, first_name: str):
         if profile.target_weight_kg:
             profile_info.append(f"• <b>Целевой вес:</b> {profile.target_weight_kg} кг")
         if profile.goal:
-            profile_info.append(f"• <b>Цель:</b> {profile.goal}")
+            goal_display = {
+                "lose_weight": "⚖️ Похудеть",
+                "gain_muscle": "💪 Набрать мышечную массу",
+                "maintain": "🛡️ Поддерживать форму",
+                "improve_health": "❤️ Улучшить здоровье",
+                "improve_endurance": "🏃 Увеличить выносливость",
+                "body_recomposition": "🎨 Преобразить тело"
+            }.get(profile.goal, profile.goal)
+            profile_info.append(f"• <b>Цель:</b> {goal_display}")
         
         profile_details = "\n".join(profile_info) if profile_info else "<i>Основные данные не заполнены</i>"
         
