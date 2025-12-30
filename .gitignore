@@ -15,3 +15,7 @@ venv/
 
 # Alembic
 alembic/__pycache__/
+
+# Uploaded files
+files/meal_plans/*
+!files/meal_plans/.gitkeep

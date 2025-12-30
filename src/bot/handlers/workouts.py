@@ -1,3 +1,5 @@
+import os
+from pathlib import Path
 from aiogram import Router, types, F
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -5,6 +7,7 @@ from sqlalchemy.orm import selectinload
 from src.database.session import async_session_maker
 from src.database.models import User, UserProfile
 from src.services.matching import MatchingService
+from src.services.file_service import file_service
 from src.bot.keyboards.main_menu import get_main_menu_kb
 
 router = Router()
@@ -276,3 +279,45 @@ async def show_meal_plan(message: types.Message):
             parse_mode="HTML",
             reply_markup=get_main_menu_kb()
         )
+
+        # Отправляем PDF файл если есть
+        if meal_plan.pdf_file_path:
+            pdf_path = file_service.get_pdf_path(meal_plan.pdf_file_path)
+            if pdf_path:
+                try:
+                    await message.answer_document(
+                        document=types.FSInputFile(pdf_path),
+                        caption="📄 <b>Подробный план питания (PDF)</b>",
+                        parse_mode="HTML"
+                    )
+                    print(f"Sent PDF file: {meal_plan.pdf_file_path}")
+                except Exception as e:
+                    print(f"Error sending PDF: {e}")
+                    await message.answer(
+                        "⚠️ Не удалось отправить PDF файл плана питания",
+                        reply_markup=get_main_menu_kb()
+                    )
+
+        # Отправляем изображения если есть (закомментировано для тестирования)
+        # if meal_plan.image_file_paths:
+        #     image_paths = file_service.get_image_paths(meal_plan.image_file_paths)
+        #     for i, image_path in enumerate(image_paths[:3]):  # Максимум 3 изображения
+        #         try:
+        #             await message.answer_photo(
+        #                 photo=types.FSInputFile(image_path),
+        #                 caption=f"🖼️ <b>Пример рациона {i+1}</b>",
+        #                 parse_mode="HTML"
+        #             )
+        #             print(f"Sent image file: {image_path}")
+        #         except Exception as e:
+        #             print(f"Error sending image {i+1}: {e}")
+
+        # Если есть файлы, отправляем финальное сообщение
+        if meal_plan.pdf_file_path or (meal_plan.image_file_paths and file_service.get_image_paths(meal_plan.image_file_paths)):
+            await message.answer(
+                "📋 <b>Файлы плана питания отправлены!</b>\n\n"
+                "Изучите материалы и следуйте рекомендациям.\n"
+                "При необходимости скорректируйте рацион под свои предпочтения.",
+                parse_mode="HTML",
+                reply_markup=get_main_menu_kb()
+            )

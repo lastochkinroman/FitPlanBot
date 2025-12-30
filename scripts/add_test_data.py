@@ -12,7 +12,7 @@ root_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(root_dir))
 
 from src.database.session import async_session_maker
-from src.database.models import WorkoutPlan
+from src.database.models import WorkoutPlan, MealPlan
 
 
 async def add_test_workout_plans():
@@ -83,5 +83,71 @@ async def add_test_workout_plans():
         print(f"Добавлено {len(plans_data)} тестовых планов тренировок")
 
 
+async def add_test_meal_plans():
+    """Добавляет тестовые планы питания"""
+    async with async_session_maker() as session:
+        # Проверяем, есть ли уже планы
+        from sqlalchemy import select
+        result = await session.execute(select(MealPlan))
+        existing_plans = result.scalars().all()
+
+        if existing_plans:
+            print(f"Уже есть {len(existing_plans)} планов питания")
+            return
+
+        # Создаем тестовые планы
+        plans_data = [
+            {
+                "name": "Низкокалорийный план для похудения",
+                "description": "План питания с дефицитом калорий для эффективного снижения веса. Включает здоровые продукты и правильный баланс макронутриентов.",
+                "target_goal": ["lose_weight"],
+                "calories_range": [1500, 2000],
+                "pdf_file_path": "/files/meal_plans/low_calorie_diet.pdf",
+                "image_file_paths": [
+                    "/files/meal_plans/low_calorie_1.jpg",
+                    "/files/meal_plans/low_calorie_2.jpg"
+                ],
+                "is_active": True
+            },
+            {
+                "name": "Высококалорийный план для набора массы",
+                "description": "План питания с профицитом калорий для роста мышечной массы. Содержит много белка и сложных углеводов.",
+                "target_goal": ["gain_muscle"],
+                "calories_range": [2800, 3500],
+                "pdf_file_path": "/files/meal_plans/high_calorie_diet.pdf",
+                "image_file_paths": [
+                    "/files/meal_plans/high_calorie_1.jpg",
+                    "/files/meal_plans/high_calorie_2.jpg"
+                ],
+                "is_active": True
+            },
+            {
+                "name": "Сбалансированный план поддержания веса",
+                "description": "План питания для поддержания текущего веса. Идеальный баланс калорий для поддержания формы.",
+                "target_goal": ["maintain"],
+                "calories_range": [2000, 2500],
+                "pdf_file_path": "/files/meal_plans/maintenance_diet.pdf",
+                "image_file_paths": [
+                    "/files/meal_plans/maintenance_1.jpg",
+                    "/files/meal_plans/maintenance_2.jpg"
+                ],
+                "is_active": True
+            }
+        ]
+
+        for plan_data in plans_data:
+            plan = MealPlan(**plan_data)
+            session.add(plan)
+
+        await session.commit()
+        print(f"Добавлено {len(plans_data)} тестовых планов питания")
+
+
+async def main():
+    """Основная функция для добавления всех тестовых данных"""
+    await add_test_workout_plans()
+    await add_test_meal_plans()
+
+
 if __name__ == "__main__":
-    asyncio.run(add_test_workout_plans())
+    asyncio.run(main())

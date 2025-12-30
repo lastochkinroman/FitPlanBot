@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqladmin import Admin, ModelView
 from sqlalchemy.ext.asyncio import AsyncSession
+from wtforms import TextAreaField
 
 from src.database.models import User, UserProfile, Subscription, WorkoutPlan, MealPlan, UserDailyLog, Notification
 from src.database.session import engine, async_session_maker
@@ -175,11 +176,11 @@ class WorkoutPlanAdmin(ModelView, model=WorkoutPlan):
 
     # Настраиваем отображение JSON полей
     form_overrides = {
-        'target_goal': 'TextArea',
-        'target_level': 'TextArea',
-        'target_body_type': 'TextArea',
-        'schedule': 'TextArea',
-        'video_links': 'TextArea',
+        'target_goal': TextAreaField,
+        'target_level': TextAreaField,
+        'target_body_type': TextAreaField,
+        'schedule': TextAreaField,
+        'video_links': TextAreaField,
     }
 
     column_labels = {
@@ -212,6 +213,20 @@ class MealPlanAdmin(ModelView, model=MealPlan):
     ]
     column_searchable_list = [MealPlan.name]
     column_sortable_list = [MealPlan.created_at]
+
+    # Настраиваем отображение JSON полей
+    form_overrides = {
+        'target_goal': TextAreaField,
+        'calories_range': TextAreaField,
+        'image_file_paths': TextAreaField,
+    }
+
+    column_labels = {
+        'target_goal': 'Цели (JSON массив)',
+        'calories_range': 'Диапазон калорий (JSON массив)',
+        'pdf_file_path': 'Путь к PDF файлу',
+        'image_file_paths': 'Пути к изображениям (JSON массив)',
+    }
 
 # Модель администратора для логов активности
 class UserDailyLogAdmin(ModelView, model=UserDailyLog):

@@ -143,11 +143,16 @@ class MatchingService:
         if not profile.weight_kg or not profile.height_cm or not profile.age or not profile.gender:
             return (1800, 2500)  # Значения по умолчанию
 
+        # Конвертируем в float для расчетов
+        weight = float(profile.weight_kg)
+        height = float(profile.height_cm)
+        age = float(profile.age)
+
         # Простая формула расчета базового метаболизма (BMR)
         if profile.gender == 'male':
-            bmr = 88.362 + (13.397 * profile.weight_kg) + (4.799 * profile.height_cm) - (5.677 * profile.age)
+            bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age)
         else:
-            bmr = 447.593 + (9.247 * profile.weight_kg) + (3.098 * profile.height_cm) - (4.330 * profile.age)
+            bmr = 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age)
 
         # Учет активности
         activity_multiplier = {
