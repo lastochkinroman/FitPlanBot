@@ -1,47 +1,66 @@
+"""Окна диалога анкеты пользователя (24 вопроса, разбитые на 5 групп)"""
+
 from aiogram_dialog import Window
-from aiogram_dialog.widgets.text import Const, Format, List  # Добавьте List
 from aiogram_dialog.widgets.input import TextInput
-from aiogram_dialog.widgets.kbd import Button, Row, Back, Next, Cancel, Radio, Group
+from aiogram_dialog.widgets.kbd import Back, Button, Cancel, Group, Next, Radio, Row
+from aiogram_dialog.widgets.text import Const, Format, List
 
-from .states import QuestionnaireStates
 from .handlers import (
-    on_age_selected, on_gender_selected, on_height_selected,
-    on_weight_selected, on_target_weight_selected, on_body_type_selected,
-    on_goal_selected, on_lifestyle_selected, on_sleep_hours_selected,
-    on_genetics_selected, on_experience_selected, on_last_form_date_selected,
-    on_training_focus_selected, on_training_location_selected, on_training_time_selected,
-    on_training_days_selected, on_training_type_selected, on_training_difficulty_selected,
-    on_injuries_selected, on_flexibility_selected, on_endurance_selected,
-    on_confirmation_save, on_confirmation_edit, getter_summary
+    get_summary_data,
+    on_age_input,
+    on_body_type_selected,
+    on_confirmation_edit,
+    on_confirmation_save,
+    on_endurance_selected,
+    on_experience_selected,
+    on_flexibility_selected,
+    on_gender_selected,
+    on_genetics_input,
+    on_goal_selected,
+    on_height_input,
+    on_injuries_input,
+    on_last_form_date_input,
+    on_lifestyle_selected,
+    on_sleep_hours_input,
+    on_target_weight_input,
+    on_training_days_input,
+    on_training_difficulty_selected,
+    on_training_focus_selected,
+    on_training_location_selected,
+    on_training_time_input,
+    on_training_type_selected,
+    on_weight_input,
 )
+from .states import QuestionnaireStates
 
-# Окно для вопроса о возрасте
+# ========== ГРУППА 1: ОСНОВНЫЕ ДАННЫЕ (6 вопросов) ==========
+
 age_window = Window(
-    Const("📊 <b>Основные данные</b>\n\n"
-          "1. <b>Сколько вам лет?</b>\n\n"
-          "<i>Введите число от 14 до 100</i>"),
+    Const(
+        "📊 <b>Основные данные</b>\n\n"
+        "1. <b>Сколько вам лет?</b>\n\n"
+        "<i>Введите число от 14 до 100</i>"
+    ),
     TextInput(
         id="age_input",
-        on_success=on_age_selected,
+        on_success=on_age_input,
     ),
     Cancel(text=Const("❌ Отмена")),
     state=QuestionnaireStates.age,
 )
 
-# Окно для вопроса о поле
 gender_window = Window(
-    Const("👤 <b>Ваш пол?</b>\n\n"
-          "<i>Выберите один из вариантов:</i>"),
+    Const("👤 <b>Ваш пол?</b>\n\n" "<i>Выберите один из вариантов:</i>"),
     Radio(
         checked_text=Format("✅ {item[0]}"),
         unchecked_text=Format("{item[0]}"),
-        id="gender_radio",  # ИЗМЕНЕНО!
-        item_id_getter=lambda item: item[1],  # ИЗМЕНЕНО!
+        id="gender_radio",
+        item_id_getter=lambda item: item[1],
         items=[
-            ("👨 Мужской", "male"),      # КОРТЕЖИ!
+            ("👨 Мужской", "male"),
             ("👩 Женский", "female"),
         ],
-        on_click=on_gender_selected,  # ИЗМЕНЕНО!
+        on_click=on_gender_selected,
     ),
     Row(
         Back(text=Const("⬅️ Назад")),
@@ -50,14 +69,15 @@ gender_window = Window(
     state=QuestionnaireStates.gender,
 )
 
-# Окно для вопроса о росте
 height_window = Window(
-    Const("📏 <b>Ваш рост (в сантиметрах)?</b>\n\n"
-          "<i>Введите число от 100 до 250 см</i>\n"
-          "<i>Например: 175</i>"),
+    Const(
+        "📏 <b>Ваш рост (в сантиметрах)?</b>\n\n"
+        "<i>Введите число от 100 до 250 см</i>\n"
+        "<i>Например: 175</i>"
+    ),
     TextInput(
         id="height_input",
-        on_success=on_height_selected,
+        on_success=on_height_input,
     ),
     Row(
         Back(text=Const("⬅️ Назад")),
@@ -66,14 +86,15 @@ height_window = Window(
     state=QuestionnaireStates.height,
 )
 
-# Окно для вопроса о весе
 weight_window = Window(
-    Const("⚖️ <b>Ваш текущий вес (в кг)?</b>\n\n"
-          "<i>Введите число от 30 до 300 кг</i>\n"
-          "<i>Например: 70.5</i>"),
+    Const(
+        "⚖️ <b>Ваш текущий вес (в кг)?</b>\n\n"
+        "<i>Введите число от 30 до 300 кг</i>\n"
+        "<i>Например: 70.5</i>"
+    ),
     TextInput(
         id="weight_input",
-        on_success=on_weight_selected,
+        on_success=on_weight_input,
     ),
     Row(
         Back(text=Const("⬅️ Назад")),
@@ -82,14 +103,15 @@ weight_window = Window(
     state=QuestionnaireStates.weight,
 )
 
-# Окно для вопроса о целевом весе
 target_weight_window = Window(
-    Const("🎯 <b>Ваш целевой вес (в кг)?</b>\n\n"
-          "<i>Введите желаемый вес</i>\n"
-          "<i>Например: 65.0</i>"),
+    Const(
+        "🎯 <b>Ваш целевой вес (в кг)?</b>\n\n"
+        "<i>Введите желаемый вес</i>\n"
+        "<i>Например: 65.0</i>"
+    ),
     TextInput(
         id="target_weight_input",
-        on_success=on_target_weight_selected,
+        on_success=on_target_weight_input,
     ),
     Row(
         Back(text=Const("⬅️ Назад")),
@@ -98,21 +120,22 @@ target_weight_window = Window(
     state=QuestionnaireStates.target_weight,
 )
 
-# Окно для вопроса о типе телосложения
 body_type_window = Window(
-    Const("💪 <b>Ваш тип телосложения?</b>\n\n"
-          "<i>Выберите наиболее подходящий вариант:</i>"),
+    Const(
+        "💪 <b>Ваш тип телосложения?</b>\n\n"
+        "<i>Выберите наиболее подходящий вариант:</i>"
+    ),
     Group(
         Radio(
             checked_text=Format("✅ {item[0]}"),
             unchecked_text=Format("{item[0]}"),
             id="body_type_radio",
-            item_id_getter=lambda item: item[1],  # ИЗМЕНЕНО!
+            item_id_getter=lambda item: item[1],
             items=[
-                ("📐 Эктоморф (худощавый)", "ectomorph"),  # КОРТЕЖИ!
+                ("📐 Эктоморф (худощавый)", "ectomorph"),
                 ("📦 Мезоморф (мускулистый)", "mesomorph"),
                 ("📦 Эндоморф (склонный к полноте)", "endomorph"),
-                ("❓ Не знаю", "unknown")
+                ("❓ Не знаю", "unknown"),
             ],
             on_click=on_body_type_selected,
         ),
@@ -126,13 +149,14 @@ body_type_window = Window(
     state=QuestionnaireStates.body_type,
 )
 
-# Группа 2: Цели и образ жизни
+# ========== ГРУППА 2: ЦЕЛИ И ОБРАЗ ЖИЗНИ (6 вопросов) ==========
 
-# Окно для вопроса о цели
 goal_window = Window(
-    Const("🎯 <b>Цели и образ жизни</b>\n\n"
-          "7. <b>Ваша основная цель?</b>\n\n"
-          "<i>Выберите главную цель тренировок:</i>"),
+    Const(
+        "🎯 <b>Цели и образ жизни</b>\n\n"
+        "7. <b>Ваша основная цель?</b>\n\n"
+        "<i>Выберите главную цель тренировок:</i>"
+    ),
     Group(
         Radio(
             checked_text=Format("✅ {item[0]}"),
@@ -158,10 +182,11 @@ goal_window = Window(
     state=QuestionnaireStates.goal,
 )
 
-# Окно для вопроса об образе жизни
 lifestyle_window = Window(
-    Const("🏃 <b>Ваш образ жизни?</b>\n\n"
-          "<i>Оцените уровень вашей ежедневной активности:</i>"),
+    Const(
+        "🏃 <b>Ваш образ жизни?</b>\n\n"
+        "<i>Оцените уровень вашей ежедневной активности:</i>"
+    ),
     Group(
         Radio(
             checked_text=Format("✅ {item[0]}"),
@@ -171,9 +196,15 @@ lifestyle_window = Window(
             items=[
                 ("🪑 Сидячий (офисная работа)", "sedentary"),
                 ("🚶 Легкая активность (прогулки)", "lightly_active"),
-                ("🏃 Средняя активность (тренировки 2-3 раза/нед)", "moderately_active"),
+                (
+                    "🏃 Средняя активность (тренировки 2-3 раза/нед)",
+                    "moderately_active",
+                ),
                 ("💪 Высокая активность (тренировки 4-5 раз/нед)", "very_active"),
-                ("🏆 Экстремальная активность (профессиональный спорт)", "extremely_active"),
+                (
+                    "🏆 Экстремальная активность (профессиональный спорт)",
+                    "extremely_active",
+                ),
             ],
             on_click=on_lifestyle_selected,
         ),
@@ -186,14 +217,15 @@ lifestyle_window = Window(
     state=QuestionnaireStates.lifestyle,
 )
 
-# Окно для вопроса о сне
 sleep_hours_window = Window(
-    Const("😴 <b>Сколько часов в сутки вы спите?</b>\n\n"
-          "<i>Введите среднее количество часов сна (4.0-12.0)</i>\n"
-          "<i>Например: 8.0</i>"),
+    Const(
+        "😴 <b>Сколько часов в сутки вы спите?</b>\n\n"
+        "<i>Введите среднее количество часов сна (4.0-12.0)</i>\n"
+        "<i>Например: 8.0</i>"
+    ),
     TextInput(
         id="sleep_input",
-        on_success=on_sleep_hours_selected,
+        on_success=on_sleep_hours_input,
     ),
     Row(
         Back(text=Const("⬅️ Назад")),
@@ -202,15 +234,16 @@ sleep_hours_window = Window(
     state=QuestionnaireStates.sleep_hours,
 )
 
-# Окно для вопроса о генетике
 genetics_window = Window(
-    Const("🧬 <b>Расскажите о вашей генетике</b>\n\n"
-          "<i>Есть ли особенности телосложения, которые передались по наследству?</i>\n"
-          "<i>Например: 'Мама полная, папа худой' или 'Все в семье худощавые'</i>\n\n"
-          "<i>(Можно оставить пустым)</i>"),
+    Const(
+        "🧬 <b>Расскажите о вашей генетике</b>\n\n"
+        "<i>Есть ли особенности телосложения, которые передались по наследству?</i>\n"
+        "<i>Например: 'Мама полная, папа худой' или 'Все в семье худощавые'</i>\n\n"
+        "<i>(Можно оставить пустым)</i>"
+    ),
     TextInput(
         id="genetics_input",
-        on_success=on_genetics_selected,
+        on_success=on_genetics_input,
     ),
     Row(
         Back(text=Const("⬅️ Назад")),
@@ -220,10 +253,11 @@ genetics_window = Window(
     state=QuestionnaireStates.genetics,
 )
 
-# Окно для вопроса об опыте тренировок
 experience_window = Window(
-    Const("🏋️ <b>У вас есть опыт тренировок?</b>\n\n"
-          "<i>Регулярно ли вы занимались спортом раньше?</i>"),
+    Const(
+        "🏋️ <b>У вас есть опыт тренировок?</b>\n\n"
+        "<i>Регулярно ли вы занимались спортом раньше?</i>"
+    ),
     Radio(
         checked_text=Format("✅ {item[0]}"),
         unchecked_text=Format("{item[0]}"),
@@ -239,34 +273,36 @@ experience_window = Window(
         Back(text=Const("⬅️ Назад")),
         Cancel(text=Const("❌ Отмена")),
     ),
-    state=QuestionnaireStates.training_experience,
+    state=QuestionnaireStates.experience,
 )
 
-# Окно для вопроса о последней идеальной форме
 last_form_date_window = Window(
-    Const("📅 <b>Когда вы были в идеальной форме?</b>\n\n"
-          "<i>Введите дату в формате ДД.ММ.ГГГГ</i>\n"
-          "<i>Или напишите 'никогда', если никогда не были</i>\n\n"
-          "<i>Пример: 01.01.2020</i>"),
+    Const(
+        "📅 <b>Когда вы были в идеальной форме?</b>\n\n"
+        "<i>Введите дату в формате ДД.ММ.ГГГГ</i>\n"
+        "<i>Или напишите 'никогда', если никогда не были</i>\n\n"
+        "<i>Пример: 01.01.2020</i>"
+    ),
     TextInput(
         id="last_form_input",
-        on_success=on_last_form_date_selected,
+        on_success=on_last_form_date_input,
     ),
     Row(
         Back(text=Const("⬅️ Назад")),
         Next(text=Const("➡️ Далее")),
         Cancel(text=Const("❌ Отмена")),
     ),
-    state=QuestionnaireStates.last_ideal_form,
+    state=QuestionnaireStates.last_form_date,
 )
 
-# Группа 3: Тренировки
+# ========== ГРУППА 3: ТРЕНИРОВКИ (6 вопросов) ==========
 
-# Окно для вопроса о фокусе тренировок
 training_focus_window = Window(
-    Const("🎯 <b>Тренировки</b>\n\n"
-          "13. <b>На каких частях тела хотите сосредоточиться?</b>\n\n"
-          "<i>Выберите приоритеты:</i>"),
+    Const(
+        "🎯 <b>Тренировки</b>\n\n"
+        "13. <b>На каких частях тела хотите сосредоточиться?</b>\n\n"
+        "<i>Выберите приоритеты:</i>"
+    ),
     Group(
         Radio(
             checked_text=Format("✅ {item[0]}"),
@@ -293,10 +329,10 @@ training_focus_window = Window(
     state=QuestionnaireStates.training_focus,
 )
 
-# Окно для вопроса о месте тренировок
 training_location_window = Window(
-    Const("🏠 <b>Где вы будете тренироваться?</b>\n\n"
-          "<i>Выберите основное место:</i>"),
+    Const(
+        "🏠 <b>Где вы будете тренироваться?</b>\n\n" "<i>Выберите основное место:</i>"
+    ),
     Group(
         Radio(
             checked_text=Format("✅ {item[0]}"),
@@ -321,14 +357,15 @@ training_location_window = Window(
     state=QuestionnaireStates.training_location,
 )
 
-# Окно для вопроса о времени тренировок
 training_time_window = Window(
-    Const("⏱️ <b>Сколько времени на тренировку?</b>\n\n"
-          "<i>Введите время в минутах (30-120)</i>\n"
-          "<i>Например: 60</i>"),
+    Const(
+        "⏱️ <b>Сколько времени на тренировку?</b>\n\n"
+        "<i>Введите время в минутах (30-120)</i>\n"
+        "<i>Например: 60</i>"
+    ),
     TextInput(
         id="training_time_input",
-        on_success=on_training_time_selected,
+        on_success=on_training_time_input,
     ),
     Row(
         Back(text=Const("⬅️ Назад")),
@@ -337,14 +374,15 @@ training_time_window = Window(
     state=QuestionnaireStates.training_time,
 )
 
-# Окно для вопроса о днях тренировок
 training_days_window = Window(
-    Const("📅 <b>Сколько дней в неделю тренировки?</b>\n\n"
-          "<i>Введите количество дней (1-7)</i>\n"
-          "<i>Например: 3</i>"),
+    Const(
+        "📅 <b>Сколько дней в неделю тренировки?</b>\n\n"
+        "<i>Введите количество дней (1-7)</i>\n"
+        "<i>Например: 3</i>"
+    ),
     TextInput(
         id="training_days_input",
-        on_success=on_training_days_selected,
+        on_success=on_training_days_input,
     ),
     Row(
         Back(text=Const("⬅️ Назад")),
@@ -353,10 +391,8 @@ training_days_window = Window(
     state=QuestionnaireStates.training_days,
 )
 
-# Окно для вопроса о типе тренировок
 training_type_window = Window(
-    Const("🎪 <b>Предпочитаемый тип тренировок?</b>\n\n"
-          "<i>Выберите стиль:</i>"),
+    Const("🎪 <b>Предпочитаемый тип тренировок?</b>\n\n" "<i>Выберите стиль:</i>"),
     Group(
         Radio(
             checked_text=Format("✅ {item[0]}"),
@@ -383,10 +419,8 @@ training_type_window = Window(
     state=QuestionnaireStates.training_type,
 )
 
-# Окно для вопроса о сложности
 training_difficulty_window = Window(
-    Const("📊 <b>Предпочитаемая сложность?</b>\n\n"
-          "<i>Выберите уровень:</i>"),
+    Const("📊 <b>Предпочитаемая сложность?</b>\n\n" "<i>Выберите уровень:</i>"),
     Group(
         Radio(
             checked_text=Format("✅ {item[0]}"),
@@ -411,18 +445,19 @@ training_difficulty_window = Window(
     state=QuestionnaireStates.training_difficulty,
 )
 
-# Группа 4: Здоровье
+# ========== ГРУППА 4: ЗДОРОВЬЕ (3 вопроса) ==========
 
-# Окно для вопроса о травмах
 injuries_window = Window(
-    Const("🏥 <b>Здоровье</b>\n\n"
-          "19. <b>Есть ли травмы или ограничения?</b>\n\n"
-          "<i>Опишите имеющиеся травмы, боли или медицинские ограничения</i>\n"
-          "<i>Например: 'Боль в колене, проблемы со спиной'</i>\n\n"
-          "<i>(Можно оставить пустым, если нет)</i>"),
+    Const(
+        "🏥 <b>Здоровье</b>\n\n"
+        "19. <b>Есть ли травмы или ограничения?</b>\n\n"
+        "<i>Опишите имеющиеся травмы, боли или медицинские ограничения</i>\n"
+        "<i>Например: 'Боль в колене, проблемы со спиной'</i>\n\n"
+        "<i>(Можно оставить пустым, если нет)</i>"
+    ),
     TextInput(
         id="injuries_input",
-        on_success=on_injuries_selected,
+        on_success=on_injuries_input,
     ),
     Row(
         Back(text=Const("⬅️ Назад")),
@@ -431,10 +466,8 @@ injuries_window = Window(
     state=QuestionnaireStates.injuries,
 )
 
-# Окно для вопроса о гибкости
 flexibility_window = Window(
-    Const("🤸 <b>Ваш уровень гибкости?</b>\n\n"
-          "<i>Оцените гибкость тела:</i>"),
+    Const("🤸 <b>Ваш уровень гибкости?</b>\n\n" "<i>Оцените гибкость тела:</i>"),
     Group(
         Radio(
             checked_text=Format("✅ {item[0]}"),
@@ -459,10 +492,11 @@ flexibility_window = Window(
     state=QuestionnaireStates.flexibility,
 )
 
-# Окно для вопроса о выносливости
 endurance_window = Window(
-    Const("🏃 <b>Ваш уровень выносливости?</b>\n\n"
-          "<i>Оцените физическую выносливость:</i>"),
+    Const(
+        "🏃 <b>Ваш уровень выносливости?</b>\n\n"
+        "<i>Оцените физическую выносливость:</i>"
+    ),
     Group(
         Radio(
             checked_text=Format("✅ {item[0]}"),
@@ -488,18 +522,15 @@ endurance_window = Window(
     state=QuestionnaireStates.endurance,
 )
 
-# Окно подтверждения данных
+# ========== ГРУППА 5: ПОДТВЕРЖДЕНИЕ (1 окно) ==========
+
 confirmation_window = Window(
-    Const("📋 <b>Подтверждение данных</b>\n\n"
-          "Проверьте введённые данные:\n"),
-    
+    Const("📋 <b>Подтверждение данных</b>\n\n" "Проверьте введённые данные:\n"),
     List(
-        field=Format("{item[0]}: <b>{item[1]}</b>"),
+        field=Format("{item[label]}: <b>{item[value]}</b>"),
         items="summary_items",
     ),
-    
     Const("\n\n<b>Всё верно?</b>"),
-    
     Row(
         Button(
             text=Const("✅ Да, сохранить"),
@@ -512,8 +543,7 @@ confirmation_window = Window(
             on_click=on_confirmation_edit,
         ),
     ),
-    
     Cancel(text=Const("❌ Отменить анкету")),
-    getter=getter_summary, 
+    getter=get_summary_data,
     state=QuestionnaireStates.confirmation,
 )

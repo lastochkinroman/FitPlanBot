@@ -1,18 +1,19 @@
-from sqlalchemy.orm import selectinload
-from typing import Optional
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
-from src.database.models import User, UserProfile
-import logging
+"""Репозиторий для работы с пользователями"""
 
-logger = logging.getLogger(__name__)
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from src.database.models import User, UserProfile
 
 
 class UserRepository:
+    """Репозиторий для работы с таблицей users"""
+
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_by_telegram_id(self, telegram_id: int) -> Optional[User]:
+    async def get_by_telegram_id(self, telegram_id: int) -> User | None:
         """
         Находит пользователя по telegram_id
         """
@@ -22,49 +23,56 @@ class UserRepository:
 
     async def create(self, telegram_id: int, **kwargs) -> User:
         """
-        Создаёт нового пользователя
+        Создает нового пользователя
         """
         user = User(telegram_id=telegram_id, **kwargs)
         self.session.add(user)
         await self.session.commit()
         await self.session.refresh(user)
-        logger.info(f"Created new user with telegram_id: {telegram_id}")
         return user
 
     async def get_or_create(self, telegram_id: int, **kwargs) -> tuple[User, bool]:
         """
-        Получает существующего пользователя или создаёт нового
-        Возвращает (user, is_created)
+        Получает или создает пользователя
+
+        Returns:
+            tuple[User, bool]: (пользователь, создан_ли_новый)
         """
         user = await self.get_by_telegram_id(telegram_id)
         if user:
             return user, False
-        
+
         user = await self.create(telegram_id, **kwargs)
         return user, True
 
-    async def update_username(self, telegram_id: int, username: str) -> Optional[User]:
+    async def update(self, user_id: str, **kwargs) -> User | None:
         """
-        Обновляет username пользователя
+        Обновляет данные пользователя
         """
-        user = await self.get_by_telegram_id(telegram_id)
+        stmt = select(User).where(User.id == user_id)
+        result = await self.session.execute(stmt)
+        user = result.scalar_one_or_none()
+
         if user:
-            user.telegram_username = username
+            for key, value in kwargs.items():
+                setattr(user, key, value)
             await self.session.commit()
             await self.session.refresh(user)
-            logger.info(f"Updated username for user {telegram_id}: {username}")
+
         return user
 
-    async def get_user_with_profile(self, telegram_id: int) -> Optional[tuple[User, Optional[UserProfile]]]:
+    async def get_with_profile(
+        self, telegram_id: int
+    ) -> tuple[User | None, UserProfile | None]:
         """
-        Получает пользователя вместе с его профилем (если есть)
+        Получает пользователя с профилем
         """
-        stmt = select(User).where(User.telegram_id == telegram_id).options(
-            selectinload(User.profile)
+        stmt = (
+            select(User)
+            .where(User.telegram_id == telegram_id)
+            .options(selectinload(User.profile))
         )
         result = await self.session.execute(stmt)
         user = result.scalar_one_or_none()
-        
-        if user:
-            return user, user.profile
-        return None, None
+
+        return (user, user.profile) if user else (None, None)
