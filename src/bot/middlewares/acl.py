@@ -1,68 +1,146 @@
-from typing import Callable, Dict, Any, Awaitable
+"""Middleware для проверки подписки пользователя"""
+
+import logging
+from datetime import datetime
+from typing import Any, Awaitable, Callable, Dict
+
 from aiogram import BaseMiddleware
-from aiogram.types import Update
+from aiogram.types import Message, Update
 from sqlalchemy import select
 
+from src.database.models import Subscription, User
 from src.database.session import async_session_maker
-from src.database.models import Subscription
+
+logger = logging.getLogger(__name__)
 
 
-class ACLMiddleware(BaseMiddleware):
+class SubscriptionMiddleware(BaseMiddleware):
     """
-    Middleware для проверки прав доступа (подписка)
+    Проверяет наличие активной подписки для доступа к платным функциям
+
+    Шаг 113-116: Middleware для проверки подписки
     """
+
+    # Действия, доступные без подписки (Шаг 114)
+    FREE_ACCESS = {
+        "commands": [
+            "/start",
+            "/help",
+            "/cancel",
+            "/profile",
+            "/me",
+            "/about",
+            "/version",
+            "/status",
+            "/subscription",
+            "/my_subscription",
+        ],
+        "texts": [
+            "📝 Заполнить анкету",
+            "👤 Мой профиль",
+            "💳 Купить подписку",
+            "⚙️ Настройки",
+        ],
+    }
+
     async def __call__(
         self,
         handler: Callable[[Update, Dict[str, Any]], Awaitable[Any]],
         event: Update,
-        data: Dict[str, Any]
+        data: Dict[str, Any],
     ) -> Any:
-        # Если нет сообщения (например, callback query) — пропускаем
-        if not event.message or not event.message.text:
+        # Получаем сообщение или callback
+        message = None
+        if event.message:
+            message = event.message
+        elif event.callback_query:
+            message = event.callback_query.message
+
+        if not message or not hasattr(message, "text"):
             return await handler(event, data)
 
-        message = event.message
-        text = message.text
+        text = message.text if message.text else ""
 
-        # Список команд, доступных без подписки
-        free_commands = ['/start', '/help', '/cancel', '/profile']
-
-        # Если это команда из свободного списка — пропускаем
-        if any(text.startswith(cmd) for cmd in free_commands):
+        # Проверяем, доступно ли действие без подписки (Шаг 114)
+        if self._is_free_access(text):
             return await handler(event, data)
 
-        # Если это текстовая кнопка из свободных действий
-        free_buttons = ['📝 Заполнить анкету', '👤 Мой профиль', '💳 Купить подписку']
-        if text in free_buttons:
-            return await handler(event, data)
+        # Проверяем активную подписку (Шаг 115)
+        user_id = message.from_user.id
+        has_active_subscription = await self._check_subscription(user_id)
 
-        # Проверяем подписку в БД
-        from src.database.repositories.subscription_repo import SubscriptionRepository
-        from src.database.repositories.user_repo import UserRepository
-        from src.database.session import async_session_maker
+        if not has_active_subscription:
+            # Блокируем доступ (Шаг 116)
+            await self._show_subscription_required(message)
+            return
 
-        async with async_session_maker() as session:
-            user_repo = UserRepository(session)
-            user = await user_repo.get_by_telegram_id(message.from_user.id)
-
-            if not user:
-                # Пользователь не найден, пропускаем проверку подписки
-                print(f"ACL: User {message.from_user.id} not found, allowing access")
-                return await handler(event, data)
-
-            repo = SubscriptionRepository(session)
-            subscription = await repo.get_active_for_user(user.id)
-
-            if not subscription:
-                print(f"ACL: No active subscription for user {user.id}, blocking access to: {text}")
-                await message.answer(
-                    "❌ <b>Для доступа к этому функционалу нужна активная подписка.</b>\n\n"
-                    "💳 Нажмите <b>'Купить подписку'</b> для отправки заявки на активацию.\n\n"
-                    "<i>После подтверждения администратором вы получите полный доступ ко всем функциям бота.</i>",
-                    parse_mode="HTML"
-                )
-                return
-            else:
-                print(f"ACL: Active subscription found for user {user.id}, allowing access to: {text}")
-
+        # Если подписка есть - пропускаем дальше
         return await handler(event, data)
+
+    def _is_free_access(self, text: str) -> bool:
+        """Проверяет, доступно ли действие без подписки"""
+        # Проверяем команды
+        for command in self.FREE_ACCESS["commands"]:
+            if text.startswith(command):
+                return True
+
+        # Проверяем тексты кнопок
+        if text in self.FREE_ACCESS["texts"]:
+            return True
+
+        # Callback-запросы на подписку
+        if text and "request_subscription" in text:
+            return True
+
+        return False
+
+    async def _check_subscription(self, telegram_id: int) -> bool:
+        """Проверяет наличие активной подписки у пользователя"""
+        try:
+            async with async_session_maker() as session:
+                # Находим пользователя
+                stmt_user = select(User).where(User.telegram_id == telegram_id)
+                user = (await session.execute(stmt_user)).scalar_one_or_none()
+
+                if not user:
+                    return False
+
+                # Проверяем активную подписку
+                now = datetime.utcnow()
+                stmt_sub = select(Subscription).where(
+                    Subscription.user_id == user.id,
+                    Subscription.status == "active",
+                    Subscription.starts_at <= now,
+                    Subscription.ends_at >= now,
+                )
+
+                subscription = (await session.execute(stmt_sub)).scalar_one_or_none()
+
+                return subscription is not None
+
+        except Exception as e:
+            logger.error(f"Error checking subscription: {e}")
+            return False
+
+    async def _show_subscription_required(self, message: Message):
+        """Показывает сообщение о необходимости подписки"""
+        from src.bot.keyboards.main_menu import get_main_menu_kb
+
+        response = (
+            "🔒 <b>Требуется подписка</b>\n\n"
+            "Для доступа к этому разделу нужна активная подписка.\n\n"
+            "✨ <b>Что дает подписка:</b>\n"
+            "✅ Персональные планы тренировок\n"
+            "✅ Индивидуальное питание\n"
+            "✅ Умные напоминания\n"
+            "✅ Отслеживание прогресса\n\n"
+            "💳 <b>Как получить подписку:</b>\n"
+            "1. Нажмите кнопку <b>'💳 Купить подписку'</b>\n"
+            "2. Запросите активацию\n"
+            "3. Администратор активирует подписку в течение 24 часов\n\n"
+            "🎯 <b>После активации вы получите доступ ко всем функциям!</b>"
+        )
+
+        await message.answer(
+            text=response, parse_mode="HTML", reply_markup=get_main_menu_kb()
+        )
